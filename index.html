@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Kata Ganti Nama Diri</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary-color: #FFC107;
+            --background-color: #e8f5e9;
+            --text-color: #333;
+            --incorrect-color: #f44336;
+            --correct-color: #4CAF50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .timer, .score, .lives {
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer { color: #f44336; }
+        .score { color: #2196F3; }
+        .lives { color: #f44336; }
+
+        /* Question Area */
+        .question-area {
+            margin-bottom: 40px;
+            text-align: left;
+            position: relative;
+        }
+
+        .image-container {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            background-color: #eee;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            color: #ccc;
+        }
+
+        .image-container svg {
+            width: 100px;
+            height: 100px;
+        }
+
+        .sentence {
+            font-size: 1.8em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone {
+            display: inline-block;
+            min-width: 80px;
+            height: 40px;
+            border-bottom: 3px dashed #ccc;
+            vertical-align: middle;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .drop-zone.hover {
+            background-color: #e0f2f1;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .drop-zone.filled {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom: none;
+            border-radius: 5px;
+            font-weight: bold;
+            padding: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        /* Options Area */
+        .options-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .drag-item {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .drag-item:hover {
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .drag-item:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .drag-item.dragging {
+            opacity: 0.5;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* End Screen */
+        #end-screen .score-display {
+            font-size: 3em;
+            color: #2196F3;
+            margin: 20px 0;
+        }
+
+        /* Audio Control */
+        .audio-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 1.5em;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .sentence { font-size: 1.4em; }
+            .image-container { height: 150px; }
+            .game-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <h1>Permainan Kata Ganti Nama Diri</h1>
+            <p>Sedia untuk menguji pengetahuan kamu? Pilih tahap kesukaran:</p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn" onclick="startGame(1)">🚼 Tahap 1 (Mudah)</button>
+                <button class="btn" onclick="startGame(2)">🎓 Tahap 2 (Sederhana)</button>
+                <button class="btn" onclick="startGame(3)">🚀 Tahap 3 (Sukar)</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div class="lives">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#f44336">
+                        <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" />
+                    </svg>
+                    <span id="lives-count">3</span>
+                </div>
+                <div class="timer">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#f44336">
+                        <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" />
+                    </svg>
+                    <span id="timer-count">15</span>s
+                </div>
+                <div class="score">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#2196F3">
+                        <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" />
+                    </svg>
+                    <span id="score-count">0</span>
+                </div>
+            </div>
+
+            <div class="question-area">
+                <div class="image-container" id="image-container">
+                    <!-- SVG ikon atau imeji dimasukkan di sini -->
+                </div>
+                <div class="sentence" id="sentence">
+                    Ahmad <span class="drop-zone" id="drop-zone"></span> makan nasi lemak.
+                </div>
+            </div>
+
+            <div class="options-area" id="options-area">
+                <!-- Pilihan Kata Ganti Nama dimasukkan di sini -->
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="screen">
+            <h1 id="end-title">Permainan Tamat!</h1>
+            <p>Skor anda:</p>
+            <div class="score-display" id="end-score">0</div>
+            <p id="end-message"></p>
+            <button class="btn" onclick="mainMenu()">🏠 Utama</button>
+            <button class="btn" onclick="startGame(currentLevel)">🔄 Main Semula</button>
+        </div>
+
+        <!-- Audio Control -->
+        <div class="audio-control" onclick="toggleAudio()" id="audio-btn">
+            🔊
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="sound-correct" src="correct.mp3"></audio>
+    <audio id="sound-incorrect" src="incorrect.mp3"></audio>
+    <audio id="sound-start" src="start.mp3"></audio>
+    <audio id="sound-victory" src="victory.mp3"></audio>
+    <audio id="sound-fail" src="fail.mp3"></audio>
+
+    <script>
+        // Data Soalan (Contoh untuk beberapa tahap)
+        const allLevelsQuestions = {
+            1: [
+                { id: 1, sentence: "**Saya** suka makan nasi lemak.", image: `<svg ...>...</svg>`, answer: "Saya", options: ["Saya", "Kamu", "Dia", "Mereka"] },
+                // ... tambah 7 lagi soalan untuk Tahap 1
+            ],
+            2: [
+                { id: 1, sentence: "**Dia** sedang membaca buku.", image: `<svg ...>...</svg>`, answer: "Dia", options: ["Saya", "Kamu", "Dia", "Kami"] },
+                // ... tambah 7 lagi soalan untuk Tahap 2
+            ],
+            3: [
+                { id: 1, sentence: "Bolehkah **awak** beri saya pen ini?", image: `<svg ...>...</svg>`, answer: "awak", options: ["Saya", "awak", "Dia", "beliau"] },
+                // ... tambah 7 lagi soalan untuk Tahap 3
+            ]
+        };
+
+        // ... data soalan penuh seperti yang dirancang di atas ...
+        // (Saya akan masukkan semua soalan penuh dalam kod sebenar)
+
+        // Variabel Permainan
+        let currentLevel = 1;
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let score = 0;
+        let lives = 3;
+        let timer;
+        let secondsLeft = 15;
+        let isAudioOn = true;
+
+        // Elemen DOM
+        const startScreen = document.getElementById('start-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const endScore = document.getElementById('end-score');
+        const endTitle = document.getElementById('end-title');
+        const endMessage = document.getElementById('end-message');
+        const sentenceEl = document.getElementById('sentence');
+        const dropZoneEl = document.getElementById('drop-zone');
+        const optionsEl = document.getElementById('options-area');
+        const scoreCountEl = document.getElementById('score-count');
+        const livesCountEl = document.getElementById('lives-count');
+        const timerCountEl = document.getElementById('timer-count');
+        const imageContainerEl = document.getElementById('image-container');
+        const audioBtn = document.getElementById('audio-btn');
+
+        // Audio Elements
+        const soundCorrect = document.getElementById('sound-correct');
+        const soundIncorrect = document.getElementById('sound-incorrect');
+        const soundStart = document.getElementById('sound-start');
+        const soundVictory = document.getElementById('sound-victory');
+        const soundFail = document.getElementById('sound-fail');
+
+        // Ikon SVG Contoh
+        const icons = {
+            budak_makan: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11.5,8A1,1 0 0,0 10.5,9A1,1 0 0,0 11.5,10A1,1 0 0,0 12.5,9A1,1 0 0,0 11.5,8M16,11H8V13H16V11M11,14.5A2.5,2.5 0 0,0 8.5,17A2.5,2.5 0 0,0 11,19.5A2.5,2.5 0 0,0 13.5,17A2.5,2.5 0 0,0 11,14.5Z" /></svg>`,
+            // ... tambah ikon lain ...
+        }
+
+        // Fungsi Utama
+        function startGame(level) {
+            currentLevel = level;
+            questions = shuffle([...allLevelsQuestions[level]]);
+            currentQuestionIndex = 0;
+            score = 0;
+            lives = 3;
+            secondsLeft = 15;
+            
+            updateScoreAndLives();
+            showScreen(gameScreen);
+            loadQuestion();
+            playSound(soundStart);
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                gameOver(true);
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            secondsLeft = 15;
+            startTimer();
+
+            // Sediakan ayat dengan drop zone
+            const parts = q.sentence.split('**');
+            let sentenceHtml = '';
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i] === q.answer) {
+                    sentenceHtml += `<span class="drop-zone" id="drop-zone" data-answer="${q.answer}"></span>`;
+                } else {
+                    sentenceHtml += parts[i];
+                }
+            }
+            sentenceEl.innerHTML = sentenceHtml;
+
+            // Sediakan imej
+            imageContainerEl.innerHTML = q.image; // SVG or other html for image
+
+            // Sediakan pilihan
+            optionsEl.innerHTML = '';
+            shuffle([...q.options]).forEach(option => {
+                const item = document.createElement('div');
+                item.className = 'drag-item';
+                item.textContent = option;
+                item.draggable = true;
+                item.addEventListener('dragstart', dragStart);
+                item.addEventListener('dragend', dragEnd);
+                optionsEl.appendChild(item);
+            });
+
+            setupDropZone();
+        }
+
+        // Drag and Drop Logic
+        let draggedItem = null;
+
+        function dragStart(e) {
+            draggedItem = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.textContent);
+        }
+
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function setupDropZone() {
+            const dropZone = document.getElementById('drop-zone');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', dragOver);
+                dropZone.addEventListener('dragleave', dragLeave);
+                dropZone.addEventListener('drop', dropItem);
+            }
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.add('hover');
+            }
+        }
+
+        function dragLeave(e) {
+            if (e.target.classList.contains('drop-zone')) {
+                e.target.classList.remove('hover');
+            }
+        }
+
+        function dropItem(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('drop-zone') && !e.target.classList.contains('filled')) {
+                const data = e.dataTransfer.getData('text/plain');
+                e.target.textContent = data;
+                e.target.classList.add('filled');
+                e.target.classList.remove('hover');
+                
+                checkAnswer(e.target);
+            }
+        }
+
+        // Semakan Jawapan
+        function checkAnswer(dropZone) {
+            clearInterval(timer);
+            const answer = dropZone.getAttribute('data-answer');
+            if (dropZone.textContent === answer) {
+                // Betul
+                playSound(soundCorrect);
+                dropZone.style.backgroundColor = 'var(--correct-color)';
+                score += currentLevel * 10;
+                
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }, 1000);
+            } else {
+                // Salah
+                playSound(soundIncorrect);
+                dropZone.style.backgroundColor = 'var(--incorrect-color)';
+                lives--;
+                updateScoreAndLives();
+
+                setTimeout(() => {
+                    dropZone.textContent = '';
+                    dropZone.classList.remove('filled');
+                    dropZone.style.backgroundColor = '';
+                    setupDropZone();
+                    
+                    if (lives <= 0) {
+                        gameOver(false);
+                    } else {
+                        secondsLeft = 10; // Extra time for wrong answer?
+                        startTimer();
+                    }
+                }, 1000);
+            }
+            updateScoreAndLives();
+        }
+
+        // Waktu Menjawab
+        function startTimer() {
+            clearInterval(timer);
+            timerCountEl.textContent = secondsLeft;
+            
+            timer = setInterval(() => {
+                secondsLeft--;
+                timerCountEl.textContent = secondsLeft;
+                
+                if (secondsLeft <= 0) {
+                    clearInterval(timer);
+                    timeOut();
+                }
+            }, 1000);
+        }
+
+        function timeOut() {
+            // Waktu tamat
+            lives--;
+            updateScoreAndLives();
+            
+            // Tandakan drop zone sebagai salah
+            const dropZone = document.getElementById('drop-zone');
+            if(dropZone){
+                dropZone.classList.add('filled');
+                dropZone.style.backgroundColor = 'var(--incorrect-color)';
+                dropZone.textContent = dropZone.getAttribute('data-answer'); // Tunjukkan jawapan
+            }
+            playSound(soundIncorrect);
+
+            setTimeout(() => {
+                if (lives <= 0) {
+                    gameOver(false);
+                } else {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }
+            }, 1500);
+        }
+
+        // Game Over & Skrin Keputusan
+        function gameOver(isVictory) {
+            clearInterval(timer);
+            if (isVictory) {
+                endTitle.textContent = "Tahniah!";
+                endMessage.textContent = `Anda telah berjaya menyelesaikan semua soalan di Tahap ${currentLevel}. Skor yang baik!`;
+                playSound(soundVictory);
+            } else {
+                endTitle.textContent = "Cuba Lagi!";
+                endMessage.textContent = `Sayangnya anda kehabisan nyawa. Jangan berputus asa, mari cuba lagi!`;
+                playSound(soundFail);
+            }
+            
+            endScore.textContent = score;
+            showScreen(endScreen);
+        }
+
+        function mainMenu() {
+            showScreen(startScreen);
+        }
+
+        // Helpers
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            screen.classList.add('active');
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function updateScoreAndLives() {
+            scoreCountEl.textContent = score;
+            livesCountEl.textContent = lives;
+        }
+
+        function playSound(sound) {
+            if (isAudioOn) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log("Audio failed:", e));
+            }
+        }
+
+        function toggleAudio() {
+            isAudioOn = !isAudioOn;
+            audioBtn.textContent = isAudioOn ? '🔊' : '🔇';
+        }
+
+        // Mulakan
+        mainMenu();
+
+    </script>
+</body>
+</html>

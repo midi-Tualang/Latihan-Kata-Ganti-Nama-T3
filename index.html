@@ -1,578 +1,999 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Permainan Kata Ganti Nama Diri</title>
-    <style>
-        :root {
-            --primary-color: #4CAF50;
-            --primary-dark: #388E3C;
-            --secondary-color: #FFC107;
-            --background-color: #e8f5e9;
-            --text-color: #333;
-            --incorrect-color: #f44336;
-            --correct-color: #4CAF50;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kata Ganti Nama Diri 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #1a1a2e;
+    --deep: #16213e;
+    --card: #0f3460;
+    --accent: #e94560;
+    --gold: #f5a623;
+    --mint: #00d2d3;
+    --lavender: #a29bfe;
+    --correct: #00b894;
+    --wrong: #d63031;
+    --white: #f0f4ff;
+    --soft: #dfe6e9;
+  }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--background-color);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            color: var(--text-color);
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .game-container {
-            width: 90%;
-            max-width: 800px;
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-            position: relative;
-        }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-        /* Screens */
-        .screen {
-            display: none;
-            padding: 40px;
-            text-align: center;
-        }
+  /* Animated starfield */
+  .stars {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    from { opacity: 0.1; transform: scale(1); }
+    to   { opacity: 0.9; transform: scale(1.4); }
+  }
 
-        .screen.active {
-            display: block;
-        }
+  /* SCREENS */
+  .screen {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .screen.hidden { display: none; }
 
-        /* Header */
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 0 20px;
-        }
+  /* ===== WELCOME SCREEN ===== */
+  #welcome-screen {
+    text-align: center;
+    gap: 24px;
+  }
+  .mascot {
+    font-size: 90px;
+    animation: bounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(245,166,35,0.6));
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-14px) rotate(3deg); }
+  }
+  .game-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--gold), var(--mint), var(--lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    text-shadow: none;
+  }
+  .tagline {
+    font-size: 1.2rem;
+    color: var(--soft);
+    max-width: 420px;
+    line-height: 1.6;
+  }
+  .player-setup {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 28px 32px;
+    width: 100%; max-width: 400px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .player-setup label {
+    font-weight: 700; font-size: 1rem;
+    color: var(--mint); letter-spacing: 0.5px;
+  }
+  .player-setup input {
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  .player-setup input:focus { border-color: var(--gold); }
+  .player-setup input::placeholder { color: rgba(255,255,255,0.4); }
 
-        .timer, .score, .lives {
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+  .level-select { display: flex; gap: 10px; }
+  .level-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--soft);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem; font-weight: 700;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .level-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--sky);
+  }
+  .level-btn:hover:not(.active) {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
 
-        .timer { color: #f44336; }
-        .score { color: #2196F3; }
-        .lives { color: #f44336; }
+  .btn-start {
+    background: linear-gradient(135deg, var(--accent), #ff6b6b);
+    border: none; border-radius: 16px;
+    padding: 16px 40px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.3rem; font-weight: 700;
+    color: white; cursor: pointer;
+    box-shadow: 0 8px 30px rgba(233,69,96,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .btn-start:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(233,69,96,0.6); }
+  .btn-start:active { transform: translateY(1px); }
 
-        /* Question Area */
-        .question-area {
-            margin-bottom: 40px;
-            text-align: left;
-            position: relative;
-        }
+  /* ===== LEARN SCREEN ===== */
+  #learn-screen { gap: 20px; }
+  .learn-header {
+    text-align: center;
+    font-family: 'Baloo 2', cursive;
+    font-size: 2rem; font-weight: 800;
+    color: var(--gold);
+  }
+  .learn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    width: 100%; max-width: 900px;
+  }
+  .learn-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 24px;
+    border-left: 5px solid var(--mint);
+    animation: slideIn 0.5s ease both;
+  }
+  .learn-card:nth-child(2) { border-color: var(--lavender); animation-delay: 0.1s; }
+  .learn-card:nth-child(3) { border-color: var(--gold); animation-delay: 0.2s; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .learn-card h3 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.3rem; font-weight: 700;
+    margin-bottom: 8px; color: var(--mint);
+  }
+  .learn-card:nth-child(2) h3 { color: var(--lavender); }
+  .learn-card:nth-child(3) h3 { color: var(--gold); }
+  .learn-card .concept {
+    font-size: 0.95rem; color: rgba(255,255,255,0.7);
+    margin-bottom: 16px; font-style: italic;
+  }
+  .word-chip {
+    display: inline-flex; flex-direction: column;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 10px 14px;
+    margin: 4px; font-size: 0.95rem;
+    width: 100%;
+  }
+  .word-chip strong { font-size: 1.1rem; color: white; }
+  .word-chip span { color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-top: 4px; }
+  .btn-play-now {
+    background: linear-gradient(135deg, var(--mint), #00a8a9);
+    border: none; border-radius: 14px;
+    padding: 14px 36px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.3rem; font-weight: 700;
+    color: var(--sky); cursor: pointer;
+    box-shadow: 0 6px 24px rgba(0,210,211,0.35);
+    transition: transform 0.15s;
+    margin-top: 12px;
+  }
+  .btn-play-now:hover { transform: translateY(-2px); }
 
-        .image-container {
-            width: 100%;
-            max-width: 300px;
-            height: 200px;
-            background-color: #eee;
-            border-radius: 10px;
-            margin: 0 auto 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3em;
-            color: #ccc;
-        }
+  /* ===== GAME SCREEN ===== */
+  #game-screen { gap: 16px; max-width: 700px; width: 100%; margin: 0 auto; }
 
-        .image-container svg {
-            width: 100px;
-            height: 100px;
-        }
+  .hud {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px; padding: 12px 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .hud-item { text-align: center; }
+  .hud-label { font-size: 0.72rem; color: rgba(255,255,255,0.6); letter-spacing: 1px; text-transform: uppercase; }
+  .hud-value { font-family: 'Baloo 2', cursive; font-size: 1.4rem; font-weight: 800; }
+  .hud-value.score { color: var(--gold); }
+  .hud-value.lives { color: var(--accent); }
+  .hud-value.question { color: var(--mint); }
 
-        .sentence {
-            font-size: 1.8em;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
+  .progress-bar {
+    width: 100%; height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mint), var(--lavender));
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-        .drop-zone {
-            display: inline-block;
-            min-width: 80px;
-            height: 40px;
-            border-bottom: 3px dashed #ccc;
-            vertical-align: middle;
-            position: relative;
-            cursor: pointer;
-        }
+  .question-card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 28px 28px 24px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .q-type-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .badge-1 { background: rgba(0,210,211,0.15); color: var(--mint); }
+  .badge-2 { background: rgba(162,155,254,0.15); color: var(--lavender); }
+  .badge-3 { background: rgba(245,166,35,0.15); color: var(--gold); }
 
-        .drop-zone.hover {
-            background-color: #e0f2f1;
-            border-bottom: 3px solid var(--primary-color);
-        }
+  .q-sentence {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(1.3rem, 4vw, 1.6rem);
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  
+  /* Penambahbaikan visual tempat kosong */
+  .q-blank {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border-bottom: 3px solid var(--gold);
+    padding: 2px 24px;
+    border-radius: 6px;
+    min-width: 80px;
+    text-align: center;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+  }
+  
+  .q-blank.filled-correct {
+    background: var(--correct);
+    color: white;
+    border-bottom: none;
+    letter-spacing: normal;
+  }
 
-        .drop-zone.filled {
-            background-color: var(--primary-color);
-            color: white;
-            border-bottom: none;
-            border-radius: 5px;
-            font-weight: bold;
-            padding: 0 10px;
-            transition: all 0.3s ease;
-        }
+  .q-blank.filled-wrong {
+    background: var(--wrong);
+    color: white;
+    border-bottom: none;
+    letter-spacing: normal;
+  }
 
-        /* Options Area */
-        .options-area {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 30px;
-        }
+  .q-instruction {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 10px;
+    font-style: italic;
+  }
 
-        .drag-item {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: grab;
-            user-select: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: bold;
-            font-size: 1.1em;
-        }
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .option-btn {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 16px 12px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.2rem; font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .option-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.12);
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+  .option-btn.correct {
+    background: rgba(0,184,148,0.25);
+    border-color: var(--correct);
+    animation: correctPulse 0.5s ease;
+  }
+  .option-btn.wrong {
+    background: rgba(214,48,49,0.2);
+    border-color: var(--wrong);
+    animation: shake 0.4s ease;
+  }
+  @keyframes correctPulse {
+    0%  { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100%{ transform: scale(1); }
+  }
+  @keyframes shake {
+    0%,100%{ transform: translateX(0); }
+    20%    { transform: translateX(-8px); }
+    40%    { transform: translateX(8px); }
+    60%    { transform: translateX(-5px); }
+    80%    { transform: translateX(5px); }
+  }
+  .option-btn:disabled { cursor: default; }
 
-        .drag-item:hover {
-            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-        }
+  /* Feedback bubble */
+  .feedback {
+    width: 100%;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 700; font-size: 1rem;
+    display: none; align-items: center; gap: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  .feedback.show { display: flex; }
+  .feedback.correct-fb { background: rgba(0,184,148,0.15); border: 1px solid var(--correct); color: #55efc4; }
+  .feedback.wrong-fb   { background: rgba(214,48,49,0.15);  border: 1px solid var(--wrong);  color: #ff7675; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .feedback-icon { font-size: 1.4rem; }
 
-        .drag-item:active {
-            cursor: grabbing;
-            transform: scale(0.95);
-        }
+  .btn-next {
+    background: linear-gradient(135deg, var(--lavender), #7c6fff);
+    border: none; border-radius: 14px;
+    padding: 14px 36px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.2rem; font-weight: 700;
+    color: white; cursor: pointer;
+    display: none;
+    box-shadow: 0 6px 24px rgba(162,155,254,0.35);
+    transition: transform 0.15s;
+    align-self: center;
+  }
+  .btn-next.show { display: block; }
+  .btn-next:hover { transform: translateY(-2px); }
 
-        .drag-item.dragging {
-            opacity: 0.5;
-        }
+  /* ===== RESULT SCREEN ===== */
+  #result-screen { text-align: center; gap: 20px; }
+  .result-mascot { font-size: 80px; animation: resultBounce 1s ease infinite alternate; }
+  @keyframes resultBounce {
+    from { transform: translateY(0) scale(1); }
+    to   { transform: translateY(-12px) scale(1.08); }
+  }
+  .result-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 2.5rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--gold), var(--accent));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-name { color: var(--mint); font-size: 1.3rem; font-weight: 700; }
+  .score-display {
+    background: var(--card);
+    border-radius: 20px; padding: 24px 36px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .score-display .big-score {
+    font-family: 'Baloo 2', cursive;
+    font-size: 4rem; font-weight: 800;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(245,166,35,0.5);
+  }
+  .score-display .score-label { color: rgba(255,255,255,0.7); font-size: 1rem; }
+  .stars-display { font-size: 2.8rem; margin: 4px 0; letter-spacing: 4px; }
+  .result-message { color: var(--soft); font-size: 1.1rem; max-width: 320px; }
+  .result-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn-replay, .btn-menu {
+    border: none; border-radius: 14px;
+    padding: 14px 28px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.2rem; font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .btn-replay { background: linear-gradient(135deg, var(--accent), #ff6b6b); color: white; }
+  .btn-menu   { background: rgba(255,255,255,0.08); color: var(--soft); border: 1px solid rgba(255,255,255,0.15); }
+  .btn-replay:hover, .btn-menu:hover { transform: translateY(-2px); }
 
-        /* Buttons */
-        .btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 30px;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
+  /* Floating particles on correct */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    font-size: 1.5rem;
+    animation: particleFly 1s ease forwards;
+  }
+  @keyframes particleFly {
+    0%  { opacity: 1; transform: translate(0,0) scale(1); }
+    100%{ opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+  }
 
-        .btn:hover {
-            background-color: var(--primary-dark);
-        }
+  /* Combo badge */
+  .combo-badge {
+    position: fixed; top: 80px; right: 20px; z-index: 100;
+    background: linear-gradient(135deg, var(--gold), var(--accent));
+    color: white;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.1rem; font-weight: 800;
+    padding: 10px 18px;
+    border-radius: 30px;
+    box-shadow: 0 6px 20px rgba(245,166,35,0.5);
+    opacity: 0;
+    transform: scale(0.5) translateY(-20px);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .combo-badge.show {
+    opacity: 1; transform: scale(1) translateY(0);
+  }
 
-        .btn:active {
-            transform: scale(0.98);
-        }
+  /* Timer ring */
+  .timer-ring-wrap {
+    position: relative; width: 56px; height: 56px;
+  }
+  .timer-ring-wrap svg { transform: rotate(-90deg); }
+  .timer-circle-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 4; }
+  .timer-circle { fill: none; stroke: var(--mint); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+  .timer-text {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.1rem; font-weight: 800;
+    color: var(--mint);
+  }
 
-        /* End Screen */
-        #end-screen .score-display {
-            font-size: 3em;
-            color: #2196F3;
-            margin: 20px 0;
-        }
-
-        /* Audio Control */
-        .audio-control {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            cursor: pointer;
-            font-size: 1.5em;
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-            .sentence { font-size: 1.4em; }
-            .image-container { height: 150px; }
-            .game-header { flex-direction: column; gap: 10px; align-items: flex-start; }
-        }
-    </style>
+  @media (max-width: 480px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .learn-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
-    <div class="game-container">
-        <!-- Start Screen -->
-        <div id="start-screen" class="screen active">
-            <h1>Permainan Kata Ganti Nama Diri</h1>
-            <p>Sedia untuk menguji pengetahuan kamu? Pilih tahap kesukaran:</p>
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button class="btn" onclick="startGame(1)">🚼 Tahap 1 (Mudah)</button>
-                <button class="btn" onclick="startGame(2)">🎓 Tahap 2 (Sederhana)</button>
-                <button class="btn" onclick="startGame(3)">🚀 Tahap 3 (Sukar)</button>
-            </div>
-        </div>
 
-        <!-- Game Screen -->
-        <div id="game-screen" class="screen">
-            <div class="game-header">
-                <div class="lives">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#f44336">
-                        <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z" />
-                    </svg>
-                    <span id="lives-count">3</span>
-                </div>
-                <div class="timer">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#f44336">
-                        <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z" />
-                    </svg>
-                    <span id="timer-count">15</span>s
-                </div>
-                <div class="score">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#2196F3">
-                        <path d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z" />
-                    </svg>
-                    <span id="score-count">0</span>
-                </div>
-            </div>
+<div class="stars" id="stars"></div>
 
-            <div class="question-area">
-                <div class="image-container" id="image-container">
-                    <!-- SVG ikon atau imeji dimasukkan di sini -->
-                </div>
-                <div class="sentence" id="sentence">
-                    Ahmad <span class="drop-zone" id="drop-zone"></span> makan nasi lemak.
-                </div>
-            </div>
+<div class="combo-badge" id="comboBadge">🔥 Combo!</div>
 
-            <div class="options-area" id="options-area">
-                <!-- Pilihan Kata Ganti Nama dimasukkan di sini -->
-            </div>
-        </div>
+<div class="screen" id="welcome-screen">
+  <div class="mascot">🦉</div>
+  <h1 class="game-title">Kata Ganti<br>Nama Diri</h1>
+  <p class="tagline">Belajar dan main bersama Wawe si Burung Hantu! Kita akan terokai dunia kata ganti nama diri bersama-sama. 🌟</p>
 
-        <!-- End Screen -->
-        <div id="end-screen" class="screen">
-            <h1 id="end-title">Permainan Tamat!</h1>
-            <p>Skor anda:</p>
-            <div class="score-display" id="end-score">0</div>
-            <p id="end-message"></p>
-            <button class="btn" onclick="mainMenu()">🏠 Utama</button>
-            <button class="btn" onclick="startGame(currentLevel)">🔄 Main Semula</button>
-        </div>
-
-        <!-- Audio Control -->
-        <div class="audio-control" onclick="toggleAudio()" id="audio-btn">
-            🔊
-        </div>
+  <div class="player-setup">
+    <label>✏️ Nama kamu:</label>
+    <input type="text" id="playerName" placeholder="Contoh: Ahmad..." maxlength="20">
+    <label>🎯 Pilih tahap kesukaran:</label>
+    <div class="level-select">
+      <button class="level-btn active" onclick="selectLevel('mudah',this)">🌱 Mudah</button>
+      <button class="level-btn" onclick="selectLevel('sederhana',this)">⚡ Sederhana</button>
+      <button class="level-btn" onclick="selectLevel('susah',this)">🔥 Susah</button>
     </div>
+  </div>
 
-    <!-- Audio Elements -->
-    <audio id="sound-correct" src="correct.mp3"></audio>
-    <audio id="sound-incorrect" src="incorrect.mp3"></audio>
-    <audio id="sound-start" src="start.mp3"></audio>
-    <audio id="sound-victory" src="victory.mp3"></audio>
-    <audio id="sound-fail" src="fail.mp3"></audio>
+  <button class="btn-start" onclick="goLearn()">📖 Mari Belajar Dulu!</button>
+  <button class="btn-start" style="background:linear-gradient(135deg,var(--mint),#00a8a9);box-shadow:0 8px 30px rgba(0,210,211,0.4)" onclick="startGame()">🎮 Terus Main!</button>
+</div>
 
-    <script>
-        // Data Soalan (Contoh untuk beberapa tahap)
-        const allLevelsQuestions = {
-            1: [
-                { id: 1, sentence: "**Saya** suka makan nasi lemak.", image: `<svg ...>...</svg>`, answer: "Saya", options: ["Saya", "Kamu", "Dia", "Mereka"] },
-                // ... tambah 7 lagi soalan untuk Tahap 1
-            ],
-            2: [
-                { id: 1, sentence: "**Dia** sedang membaca buku.", image: `<svg ...>...</svg>`, answer: "Dia", options: ["Saya", "Kamu", "Dia", "Kami"] },
-                // ... tambah 7 lagi soalan untuk Tahap 2
-            ],
-            3: [
-                { id: 1, sentence: "Bolehkah **awak** beri saya pen ini?", image: `<svg ...>...</svg>`, answer: "awak", options: ["Saya", "awak", "Dia", "beliau"] },
-                // ... tambah 7 lagi soalan untuk Tahap 3
-            ]
-        };
+<div class="screen hidden" id="learn-screen">
+  <h2 class="learn-header">📚 Buku Panduan Wawe</h2>
+  <div class="learn-grid">
+    <div class="learn-card">
+      <h3>👤 Kata Ganti Diri Pertama</h3>
+      <p class="concept">"Perkataan ini merujuk kepada diri sendiri atau kumpulan kita."</p>
+      <div class="word-chip"><strong>Saya</strong><span>Diri sendiri secara sopan</span></div>
+      <div class="word-chip"><strong>Kami</strong><span>Kumpulan kita, tak termasuk pendengar</span></div>
+      <div class="word-chip"><strong>Kita</strong><span>Semua orang termasuk pendengar</span></div>
+    </div>
+    <div class="learn-card">
+      <h3>👥 Kata Ganti Diri Kedua</h3>
+      <p class="concept">"Perkataan ini digunakan untuk memanggil orang yang sedang bersembang dengan kita."</p>
+      <div class="word-chip"><strong>Awak</strong><span>Untuk kawan-kawan yang rapat</span></div>
+      <div class="word-chip"><strong>Kamu</strong><span>Guru kepada murid / sesama rakan</span></div>
+    </div>
+    <div class="learn-card">
+      <h3>🧑‍🤝‍🧑 Kata Ganti Diri Ketiga</h3>
+      <p class="concept">"Perkataan ini digunakan apabila bercakap tentang orang lain yang tiada di situ."</p>
+      <div class="word-chip"><strong>Dia</strong><span>Seorang orang biasa / kawan</span></div>
+      <div class="word-chip"><strong>Mereka</strong><span>Ramai orang (lebih daripada seorang)</span></div>
+      <div class="word-chip"><strong>Beliau</strong><span>Orang yang dihormati (guru, doktor)</span></div>
+    </div>
+  </div>
+  <button class="btn-play-now" onclick="startGame()">🎮 Saya Sudah Faham! Jom Main!</button>
+</div>
 
-        // ... data soalan penuh seperti yang dirancang di atas ...
-        // (Saya akan masukkan semua soalan penuh dalam kod sebenar)
+<div class="screen hidden" id="game-screen">
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-label">Markah</div>
+      <div class="hud-value score" id="scoreDisplay">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Soalan</div>
+      <div class="hud-value question" id="qNumDisplay">1 / 10</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Nyawa</div>
+      <div class="hud-value lives" id="livesDisplay">❤️❤️❤️</div>
+    </div>
+    <div class="timer-ring-wrap">
+      <svg width="56" height="56" viewBox="0 0 56 56">
+        <circle class="timer-circle-bg" cx="28" cy="28" r="22"/>
+        <circle class="timer-circle" id="timerCircle" cx="28" cy="28" r="22"
+          stroke-dasharray="138.2" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-text" id="timerText">15</div>
+    </div>
+  </div>
 
-        // Variabel Permainan
-        let currentLevel = 1;
-        let currentQuestionIndex = 0;
-        let questions = [];
-        let score = 0;
-        let lives = 3;
-        let timer;
-        let secondsLeft = 15;
-        let isAudioOn = true;
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
 
-        // Elemen DOM
-        const startScreen = document.getElementById('start-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const endScreen = document.getElementById('end-screen');
-        const endScore = document.getElementById('end-score');
-        const endTitle = document.getElementById('end-title');
-        const endMessage = document.getElementById('end-message');
-        const sentenceEl = document.getElementById('sentence');
-        const dropZoneEl = document.getElementById('drop-zone');
-        const optionsEl = document.getElementById('options-area');
-        const scoreCountEl = document.getElementById('score-count');
-        const livesCountEl = document.getElementById('lives-count');
-        const timerCountEl = document.getElementById('timer-count');
-        const imageContainerEl = document.getElementById('image-container');
-        const audioBtn = document.getElementById('audio-btn');
+  <div class="question-card">
+    <div class="q-type-badge badge-1" id="qBadge">Diri Pertama</div>
+    <div class="q-sentence" id="qSentence"></div>
+    <div class="q-instruction" id="qInstruction"></div>
+  </div>
 
-        // Audio Elements
-        const soundCorrect = document.getElementById('sound-correct');
-        const soundIncorrect = document.getElementById('sound-incorrect');
-        const soundStart = document.getElementById('sound-start');
-        const soundVictory = document.getElementById('sound-victory');
-        const soundFail = document.getElementById('sound-fail');
+  <div class="options-grid" id="optionsGrid"></div>
 
-        // Ikon SVG Contoh
-        const icons = {
-            budak_makan: `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M11.5,8A1,1 0 0,0 10.5,9A1,1 0 0,0 11.5,10A1,1 0 0,0 12.5,9A1,1 0 0,0 11.5,8M16,11H8V13H16V11M11,14.5A2.5,2.5 0 0,0 8.5,17A2.5,2.5 0 0,0 11,19.5A2.5,2.5 0 0,0 13.5,17A2.5,2.5 0 0,0 11,14.5Z" /></svg>`,
-            // ... tambah ikon lain ...
-        }
+  <div class="feedback" id="feedbackBox">
+    <span class="feedback-icon" id="feedbackIcon"></span>
+    <span id="feedbackText"></span>
+  </div>
 
-        // Fungsi Utama
-        function startGame(level) {
-            currentLevel = level;
-            questions = shuffle([...allLevelsQuestions[level]]);
-            currentQuestionIndex = 0;
-            score = 0;
-            lives = 3;
-            secondsLeft = 15;
-            
-            updateScoreAndLives();
-            showScreen(gameScreen);
-            loadQuestion();
-            playSound(soundStart);
-        }
+  <button class="btn-next" id="btnNext" onclick="nextQuestion()">Seterusnya ➜</button>
+</div>
 
-        function loadQuestion() {
-            if (currentQuestionIndex >= questions.length) {
-                gameOver(true);
-                return;
-            }
+<div class="screen hidden" id="result-screen">
+  <div class="result-mascot" id="resultMascot">🦉</div>
+  <div class="result-title" id="resultTitle">Tahniah!</div>
+  <div class="result-name" id="resultName"></div>
+  <div class="score-display">
+    <div class="big-score" id="finalScore">0</div>
+    <div class="score-label">Markah keseluruhan</div>
+    <div class="stars-display" id="starsDisplay">⭐⭐⭐</div>
+  </div>
+  <div class="result-message" id="resultMessage"></div>
+  <div class="result-btns">
+    <button class="btn-replay" onclick="startGame()">🔄 Main Semula!</button>
+    <button class="btn-menu"   onclick="goMenu()">🏠 Menu Utama</button>
+  </div>
+</div>
 
-            const q = questions[currentQuestionIndex];
-            secondsLeft = 15;
-            startTimer();
+<script>
+// ──────────────────────────────────────────────
+//  AUDIO ENGINE  (Web Audio API — no external files)
+// ──────────────────────────────────────────────
+const AC = new (window.AudioContext || window.webkitAudioContext)();
 
-            // Sediakan ayat dengan drop zone
-            const parts = q.sentence.split('**');
-            let sentenceHtml = '';
-            for (let i = 0; i < parts.length; i++) {
-                if (parts[i] === q.answer) {
-                    sentenceHtml += `<span class="drop-zone" id="drop-zone" data-answer="${q.answer}"></span>`;
-                } else {
-                    sentenceHtml += parts[i];
-                }
-            }
-            sentenceEl.innerHTML = sentenceHtml;
+function resumeAC() { if (AC.state === 'suspended') AC.resume(); }
 
-            // Sediakan imej
-            imageContainerEl.innerHTML = q.image; // SVG or other html for image
+function playTone(freq, type='sine', dur=0.25, vol=0.3, delay=0) {
+  resumeAC();
+  const osc = AC.createOscillator();
+  const gain = AC.createGain();
+  osc.connect(gain); gain.connect(AC.destination);
+  osc.type = type; osc.frequency.value = freq;
+  const t = AC.currentTime + delay;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(vol, t + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.start(t); osc.stop(t + dur + 0.02);
+}
 
-            // Sediakan pilihan
-            optionsEl.innerHTML = '';
-            shuffle([...q.options]).forEach(option => {
-                const item = document.createElement('div');
-                item.className = 'drag-item';
-                item.textContent = option;
-                item.draggable = true;
-                item.addEventListener('dragstart', dragStart);
-                item.addEventListener('dragend', dragEnd);
-                optionsEl.appendChild(item);
-            });
+function soundCorrect() {
+  [523, 659, 784, 1047].forEach((f,i) => playTone(f,'sine',0.18,0.3, i*0.1));
+}
 
-            setupDropZone();
-        }
+function soundWrong() {
+  [300, 220, 160].forEach((f,i) => playTone(f,'sawtooth',0.18,0.25, i*0.12));
+}
 
-        // Drag and Drop Logic
-        let draggedItem = null;
+function soundCombo() {
+  [523,659,784,1047,1319].forEach((f,i) => playTone(f,'sine',0.15,0.25, i*0.08));
+}
 
-        function dragStart(e) {
-            draggedItem = e.target;
-            e.target.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', e.target.textContent);
-        }
+function soundTick() { playTone(880,'sine',0.06,0.08); }
+function soundUrgent(){ playTone(440,'square',0.1,0.15); }
+function soundStart() {
+  [392,440,523,659].forEach((f,i) => playTone(f,'triangle',0.2,0.25, i*0.12));
+}
+function soundFinish() {
+  [523,440,392,349,523,659,784].forEach((f,i) => playTone(f,'sine',0.25,0.3, i*0.11));
+}
 
-        function dragEnd(e) {
-            e.target.classList.remove('dragging');
-        }
+// ──────────────────────────────────────────────
+//  BANK SOALAN (Ditambah untuk kepelbagaian)
+// ──────────────────────────────────────────────
+const allQuestions = [
+  // DIRI PERTAMA
+  { category:1, sentence:'___ suka makan nasi lemak pada waktu pagi.', answer:'Saya', options:['Saya','Dia','Mereka','Beliau'], hint:'Merujuk kepada diri sendiri.' },
+  { category:1, sentence:'"___ akan pergi ke kantin sekarang," kata Ali dan Abu kepada Cikgu.', answer:'Kami', options:['Kita','Kami','Saya','Mereka'], hint:'Kumpulan yang bercakap, tak termasuk Cikgu.' },
+  { category:1, sentence:'"___ mesti menjaga kebersihan kelas setiap hari," kata guru itu kepada semua murid.', answer:'Kita', options:['Kami','Saya','Kita','Mereka'], hint:'Termasuk semua orang yang hadir (guru dan murid).' },
+  { category:1, sentence:'___ telah menyiapkan kerja sekolah semalam.', answer:'Saya', options:['Dia','Saya','Mereka','Beliau'], hint:'Diri sendiri secara sopan.' },
+  { category:1, sentence:'"Jom, ___ pergi bermain di taman permainan!" ajak Siti kepada kawan-kawannya.', answer:'Kita', options:['Kami','Kita','Saya','Dia'], hint:'Mengajak orang lain bersama-sama.' },
+  { category:1, sentence:'"___ memohon maaf kerana terlewat," kata ketua kelas dan penolongnya kepada guru.', answer:'Kami', options:['Kita','Kami','Mereka','Saya'], hint:'Kumpulan penutur, tidak termasuk guru.' },
 
-        function setupDropZone() {
-            const dropZone = document.getElementById('drop-zone');
-            if (dropZone) {
-                dropZone.addEventListener('dragover', dragOver);
-                dropZone.addEventListener('dragleave', dragLeave);
-                dropZone.addEventListener('drop', dropItem);
-            }
-        }
+  // DIRI KEDUA
+  { category:2, sentence:'"___ bawa bekal apa hari ini?" tanya Mia kepada kawan baiknya.', answer:'Awak', options:['Kamu','Awak','Dia','Saya'], hint:'Digunakan antara kawan rapat.' },
+  { category:2, sentence:'"___ semua perlu siapkan kerja sekolah ini," pesan Cikgu Hamid.', answer:'Kamu', options:['Awak','Kamu','Mereka','Kalian'], hint:'Guru bercakap kepada sekumpulan murid.' },
+  { category:2, sentence:'"___ pandai sungguh menjawab soalan tadi!" puji Cikgu kepada Ali.', answer:'Kamu', options:['Awak','Saya','Kamu','Dia'], hint:'Guru memuji seorang murid.' },
+  { category:2, sentence:'"___ tinggal di mana?" tanya Amir kepada sahabat barunya.', answer:'Awak', options:['Kamu','Dia','Awak','Beliau'], hint:'Pertanyaan kepada kawan sebaya.' },
 
-        function dragOver(e) {
-            e.preventDefault();
-            if (e.target.classList.contains('drop-zone')) {
-                e.target.classList.add('hover');
-            }
-        }
+  // DIRI KETIGA
+  { category:3, sentence:'Aminah tidak hadir ke sekolah hari ini kerana ___ demam panas.', answer:'dia', options:['dia','mereka','beliau','kami'], hint:'Merujuk kepada seorang kawan sebaya.' },
+  { category:3, sentence:'Lihat budak-budak itu. ___ sedang bermain bola sepak di padang.', answer:'Mereka', options:['Dia','Mereka','Beliau','Kami'], hint:'Merujuk kepada ramai orang.' },
+  { category:3, sentence:'Cikgu Ahmad sangat rajin. ___ selalu datang awal ke sekolah.', answer:'Beliau', options:['Dia','Mereka','Beliau','Kita'], hint:'Guru ialah orang yang perlu dihormati.' },
+  { category:3, sentence:'Doktor Salmah sangat baik hati. ___ selalu menolong pesakit dengan senyuman.', answer:'Beliau', options:['Dia','Mereka','Beliau','Kamu'], hint:'Doktor ialah orang yang dihormati.' },
+  { category:3, sentence:'Johan dan Razif sedang belajar di perpustakaan. ___ akan menduduki peperiksaan.', answer:'Mereka', options:['Dia','Mereka','Beliau','Kami'], hint:'Dua orang atau lebih.' },
+  { category:3, sentence:'Guru Besar sekolah kami sangat prihatin. ___ sering melawat setiap kelas.', answer:'Beliau', options:['Dia','Mereka','Beliau','Kita'], hint:'Guru Besar adalah orang yang sangat dihormati.' },
+];
 
-        function dragLeave(e) {
-            if (e.target.classList.contains('drop-zone')) {
-                e.target.classList.remove('hover');
-            }
-        }
+const feedbackCorrect = [
+  '🌟 Luar biasa! Kamu memang bijak!',
+  '🎉 Betul sekali! Teruskan usaha!',
+  '✨ Hebat! Wawe sangat bangga dengan kamu!',
+  '🏆 Tepat! Kamu memang pandai!',
+  '🌈 Wah, betul! Kamu bintang hari ini!',
+];
 
-        function dropItem(e) {
-            e.preventDefault();
-            if (e.target.classList.contains('drop-zone') && !e.target.classList.contains('filled')) {
-                const data = e.dataTransfer.getData('text/plain');
-                e.target.textContent = data;
-                e.target.classList.add('filled');
-                e.target.classList.remove('hover');
-                
-                checkAnswer(e.target);
-            }
-        }
+const feedbackWrong = [
+  '😅 Hampir tepat! Cuba ingat petua Wawe.',
+  '💪 Tak apa, kita belajar dari kesilapan!',
+  '🤔 Cuba lagi! Kamu pasti boleh!',
+  '📚 Jangan risau, baca ayat itu sekali lagi.',
+];
 
-        // Semakan Jawapan
-        function checkAnswer(dropZone) {
-            clearInterval(timer);
-            const answer = dropZone.getAttribute('data-answer');
-            if (dropZone.textContent === answer) {
-                // Betul
-                playSound(soundCorrect);
-                dropZone.style.backgroundColor = 'var(--correct-color)';
-                score += currentLevel * 10;
-                
-                setTimeout(() => {
-                    currentQuestionIndex++;
-                    loadQuestion();
-                }, 1000);
-            } else {
-                // Salah
-                playSound(soundIncorrect);
-                dropZone.style.backgroundColor = 'var(--incorrect-color)';
-                lives--;
-                updateScoreAndLives();
+// ──────────────────────────────────────────────
+//  GAME STATE
+// ──────────────────────────────────────────────
+let playerName = 'Pelajar';
+let level = 'mudah';
+let score = 0;
+let lives = 3;
+let combo = 0;
+let currentQ = 0;
+let questions = [];
+let timerInterval = null;
+let timeLeft = 15;
+let answered = false;
 
-                setTimeout(() => {
-                    dropZone.textContent = '';
-                    dropZone.classList.remove('filled');
-                    dropZone.style.backgroundColor = '';
-                    setupDropZone();
-                    
-                    if (lives <= 0) {
-                        gameOver(false);
-                    } else {
-                        secondsLeft = 10; // Extra time for wrong answer?
-                        startTimer();
-                    }
-                }, 1000);
-            }
-            updateScoreAndLives();
-        }
+const TOTAL_QUESTIONS = 10; // Sentiasa pilih 10 soalan
+const TIMER_MAP = { mudah: 20, sederhana: 15, susah: 10 };
+const SCORE_MAP  = { mudah: 8,  sederhana: 12, susah: 18  };
 
-        // Waktu Menjawab
-        function startTimer() {
-            clearInterval(timer);
-            timerCountEl.textContent = secondsLeft;
-            
-            timer = setInterval(() => {
-                secondsLeft--;
-                timerCountEl.textContent = secondsLeft;
-                
-                if (secondsLeft <= 0) {
-                    clearInterval(timer);
-                    timeOut();
-                }
-            }, 1000);
-        }
+// ──────────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────────
+function generateStars() {
+  const c = document.getElementById('stars');
+  for (let i=0; i<80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random()*3+1;
+    s.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --dur:${2+Math.random()*4}s;
+      animation-delay:${Math.random()*5}s;
+    `;
+    c.appendChild(s);
+  }
+}
+generateStars();
 
-        function timeOut() {
-            // Waktu tamat
-            lives--;
-            updateScoreAndLives();
-            
-            // Tandakan drop zone sebagai salah
-            const dropZone = document.getElementById('drop-zone');
-            if(dropZone){
-                dropZone.classList.add('filled');
-                dropZone.style.backgroundColor = 'var(--incorrect-color)';
-                dropZone.textContent = dropZone.getAttribute('data-answer'); // Tunjukkan jawapan
-            }
-            playSound(soundIncorrect);
+function selectLevel(l, btn) {
+  resumeAC();
+  level = l;
+  document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
-            setTimeout(() => {
-                if (lives <= 0) {
-                    gameOver(false);
-                } else {
-                    currentQuestionIndex++;
-                    loadQuestion();
-                }
-            }, 1500);
-        }
+function goLearn() {
+  resumeAC();
+  const name = document.getElementById('playerName').value.trim();
+  if (name) playerName = name;
+  showScreen('learn-screen');
+}
 
-        // Game Over & Skrin Keputusan
-        function gameOver(isVictory) {
-            clearInterval(timer);
-            if (isVictory) {
-                endTitle.textContent = "Tahniah!";
-                endMessage.textContent = `Anda telah berjaya menyelesaikan semua soalan di Tahap ${currentLevel}. Skor yang baik!`;
-                playSound(soundVictory);
-            } else {
-                endTitle.textContent = "Cuba Lagi!";
-                endMessage.textContent = `Sayangnya anda kehabisan nyawa. Jangan berputus asa, mari cuba lagi!`;
-                playSound(soundFail);
-            }
-            
-            endScore.textContent = score;
-            showScreen(endScreen);
-        }
+function goMenu() { 
+  resumeAC();
+  showScreen('welcome-screen'); 
+}
 
-        function mainMenu() {
-            showScreen(startScreen);
-        }
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
 
-        // Helpers
-        function showScreen(screen) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            screen.classList.add('active');
-        }
+// ──────────────────────────────────────────────
+//  GAME START
+// ──────────────────────────────────────────────
+function startGame() {
+  resumeAC();
+  const name = document.getElementById('playerName').value.trim();
+  if (name) playerName = name;
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+  // Shuffle & pick 10 random questions
+  const shuffled = [...allQuestions].sort(()=>Math.random()-0.5);
+  questions = shuffled.slice(0, TOTAL_QUESTIONS);
 
-        function updateScoreAndLives() {
-            scoreCountEl.textContent = score;
-            livesCountEl.textContent = lives;
-        }
+  score = 0; lives = 3; combo = 0; currentQ = 0;
+  showScreen('game-screen');
+  soundStart();
+  renderQuestion();
+}
 
-        function playSound(sound) {
-            if (isAudioOn) {
-                sound.currentTime = 0;
-                sound.play().catch(e => console.log("Audio failed:", e));
-            }
-        }
+// ──────────────────────────────────────────────
+//  RENDER QUESTION
+// ──────────────────────────────────────────────
+function renderQuestion() {
+  answered = false;
+  const q = questions[currentQ];
 
-        function toggleAudio() {
-            isAudioOn = !isAudioOn;
-            audioBtn.textContent = isAudioOn ? '🔊' : '🔇';
-        }
+  // HUD
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('qNumDisplay').textContent = `${currentQ+1} / ${TOTAL_QUESTIONS}`;
+  updateLives();
+  document.getElementById('progressFill').style.width = `${(currentQ/TOTAL_QUESTIONS)*100}%`;
 
-        // Mulakan
-        mainMenu();
+  // Badge
+  const badge = document.getElementById('qBadge');
+  const badgeLabels = {1:'👤 Diri Pertama', 2:'👥 Diri Kedua', 3:'🧑‍🤝‍🧑 Diri Ketiga'};
+  const badgeClasses = {1:'badge-1',2:'badge-2',3:'badge-3'};
+  badge.textContent = badgeLabels[q.category];
+  badge.className = `q-type-badge ${badgeClasses[q.category]}`;
 
-    </script>
+  // Sentence with blank
+  const formatted = q.sentence.replace('___', '<span class="q-blank" id="the-blank">___</span>');
+  document.getElementById('qSentence').innerHTML = formatted;
+  document.getElementById('qInstruction').textContent = `💡 Petua: ${q.hint}`;
+
+  // Options (shuffle)
+  const opts = [...q.options].sort(()=>Math.random()-0.5);
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(opt, btn, q);
+    grid.appendChild(btn);
+  });
+
+  // Feedback + next
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback';
+  document.getElementById('btnNext').classList.remove('show');
+
+  // Timer
+  startTimer();
+}
+
+function updateLives() {
+  const hearts = ['','❤️','❤️❤️','❤️❤️❤️'];
+  document.getElementById('livesDisplay').textContent = hearts[Math.max(0,lives)];
+}
+
+// ──────────────────────────────────────────────
+//  TIMER
+// ──────────────────────────────────────────────
+function startTimer() {
+  clearInterval(timerInterval);
+  timeLeft = TIMER_MAP[level];
+  updateTimerUI(timeLeft);
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerUI(timeLeft);
+    if (timeLeft <= 5 && timeLeft > 0) soundUrgent();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timeOutAnswer();
+    }
+  }, 1000);
+}
+
+function updateTimerUI(t) {
+  const max = TIMER_MAP[level];
+  const circ = document.getElementById('timerCircle');
+  const circumference = 138.2;
+  const offset = circumference - (t/max)*circumference;
+  circ.style.strokeDashoffset = offset;
+  const hue = Math.round((t/max)*120); // 0=red 120=green
+  circ.style.stroke = `hsl(${hue},80%,55%)`;
+  document.getElementById('timerText').textContent = t;
+  document.getElementById('timerText').style.color = `hsl(${hue},80%,65%)`;
+}
+
+function timeOutAnswer() {
+  if (answered) return;
+  answered = true;
+  soundWrong();
+  lives--;
+  combo = 0;
+  
+  // Fill the blank with the correct answer visually
+  const blank = document.getElementById('the-blank');
+  if(blank) {
+      blank.textContent = questions[currentQ].answer;
+      blank.classList.add('filled-wrong');
+  }
+  
+  highlightCorrect(questions[currentQ].answer);
+  showFeedback(false, '⏰ Masa tamat! Jawapan yang betul ditunjukkan pada garisan.');
+  document.getElementById('btnNext').classList.add('show');
+  if (lives <= 0) { setTimeout(endGame, 1400); return; }
+}
+
+// ──────────────────────────────────────────────
+//  ANSWER CHECK
+// ──────────────────────────────────────────────
+function checkAnswer(selected, btn, q) {
+  resumeAC();
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+
+  const correct = selected.toLowerCase() === q.answer.toLowerCase();
+  const blank = document.getElementById('the-blank');
+
+  if (correct) {
+    btn.classList.add('correct');
+    
+    // Fill the blank with correct visual
+    if(blank) {
+        blank.textContent = q.answer;
+        blank.classList.add('filled-correct');
+    }
+    
+    soundCorrect();
+    combo++;
+    const pts = SCORE_MAP[level] + (timeLeft >= 10 ? 3 : 0) + (combo >= 3 ? 5 : 0);
+    score += pts;
+    document.getElementById('scoreDisplay').textContent = score;
+    spawnParticles(btn);
+    showFeedback(true, feedbackCorrect[Math.floor(Math.random()*feedbackCorrect.length)] + ` (+${pts} markah)`);
+    if (combo >= 3) {
+      showCombo();
+      soundCombo();
+    }
+  } else {
+    btn.classList.add('wrong');
+    
+    // Fill the blank with wrong visual but show correct text
+    if(blank) {
+        blank.textContent = q.answer;
+        blank.classList.add('filled-wrong');
+    }
+    
+    soundWrong();
+    combo = 0;
+    lives--;
+    updateLives();
+    highlightCorrect(q.answer);
+    showFeedback(false, feedbackWrong[Math.floor(Math.random()*feedbackWrong.length)]);
+  }
+
+  // Disable all
+  document.querySelectorAll('.option-btn').forEach(b=>b.disabled=true);
+  document.getElementById('btnNext').classList.add('show');
+
+  if (lives <= 0) { setTimeout(endGame, 1600); return; }
+}
+
+function highlightCorrect(ans) {
+  document.querySelectorAll('.option-btn').forEach(btn => {
+    if (btn.textContent.toLowerCase() === ans.toLowerCase()) {
+      btn.classList.add('correct');
+    }
+  });
+}
+
+function showFeedback(isCorrect, msg) {
+  const fb = document.getElementById('feedbackBox');
+  fb.className = `feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+  document.getElementById('feedbackIcon').textContent = isCorrect ? '✅' : '❌';
+  document.getElementById('feedbackText').textContent = msg;
+}
+
+function showCombo() {
+  const badge = document.getElementById('comboBadge');
+  badge.textContent = `🔥 ${combo}x Combo! Mantap!`;
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 2000);
+}
+
+// ──────────────────────────────────────────────
+//  PARTICLES
+// ──────────────────────────────────────────────
+function spawnParticles(btn) {
+  const icons = ['⭐','🌟','✨','💫','🎉','🎊'];
+  const rect = btn.getBoundingClientRect();
+  for (let i=0;i<6;i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = icons[Math.floor(Math.random()*icons.length)];
+    p.style.left = (rect.left + rect.width/2 - 12) + 'px';
+    p.style.top  = (rect.top + rect.height/2 - 12) + 'px';
+    const angle = (Math.random()*360)*Math.PI/180;
+    const dist  = 60 + Math.random()*80;
+    p.style.setProperty('--dx', `${Math.cos(angle)*dist}px`);
+    p.style.setProperty('--dy', `${Math.sin(angle)*dist - 40}px`);
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 1100);
+  }
+}
+
+// ──────────────────────────────────────────────
+//  NEXT QUESTION
+// ──────────────────────────────────────────────
+function nextQuestion() {
+  resumeAC();
+  currentQ++;
+  if (currentQ >= TOTAL_QUESTIONS || lives <= 0) { endGame(); return; }
+  renderQuestion();
+}
+
+// ──────────────────────────────────────────────
+//  END GAME
+// ──────────────────────────────────────────────
+function endGame() {
+  clearInterval(timerInterval);
+  soundFinish();
+  showScreen('result-screen');
+
+  const maxScore = TOTAL_QUESTIONS * (SCORE_MAP[level] + 3 + 5);
+  const pct = score / maxScore;
+  let stars = pct >= 0.8 ? 3 : pct >= 0.5 ? 2 : 1;
+  let mascot = stars===3 ? '🦉🌟' : stars===2 ? '🦉' : '🦉😅';
+  let title = stars===3 ? 'Cemerlang!' : stars===2 ? 'Bagus sekali!' : 'Teruskan belajar!';
+  let msg = stars===3
+    ? 'Wawe sangat bangga! Kamu menguasai Kata Ganti Nama Diri dengan sempurna!'
+    : stars===2
+    ? 'Hebat! Kamu sudah faham, tapi ada sedikit lagi yang perlu diingat.'
+    : 'Jangan putus asa! Baca semula panduan Wawe dan cuba lagi!';
+
+  document.getElementById('resultMascot').textContent = mascot;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultName').textContent = `Tahniah, ${playerName}! 🎓`;
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('starsDisplay').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+  document.getElementById('resultMessage').textContent = msg;
+}
+</script>
 </body>
 </html>
